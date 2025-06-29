@@ -82,7 +82,7 @@ def valid_ipd(n):
     if n < 1:
         n = int(8258 * n)
     shuffindex = np.random.permutation(8258)
-    data = pd.read_csv("./data/IPD/all_data.csv")
+    data = pd.read_csv("HumanLSTM/data/IPD/all_data.csv")
     trajs = np.array(data[data["period"] == 10].iloc[:, 9:27])  # (8258, 18)
     regressiondata = np.array(data[data["period"] == 10].iloc[:, 3:51])  # (8258, 48)
     regressiondata, trajs = regressiondata[shuffindex], trajs[shuffindex]
@@ -149,7 +149,7 @@ for fold in np.arange(n_fold):
         "test_set_rgx": test_set_rgx,
         "test_set_rgy": test_set_rgy,
     }
-    with open("./data/IPD/processed_train_test.pkl", "wb") as handle:
+    with open("HumanLSTM/data/IPD/processed_train_test.pkl", "wb") as handle:
         pickle.dump(full_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
     n_nodes, n_layers = 10, 2
     lstm = lstmModel(2, n_nodes, 2, n_layers)
@@ -243,7 +243,7 @@ plt.xlabel("Prediction Time Steps")
 plt.ylabel("MSE")
 plt.tight_layout()
 plt.savefig(
-    "Figures/ipd_mse_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "HumanLSTM/Figures/ipd_mse_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 lstm_mse = np.mean(MSE_by_time(ry[:, lag:], py[:, :-lag, 0]))
@@ -291,7 +291,7 @@ plt.title("IPD Task - Cooperation Prediction")
 plt.xlabel("Prediction Time Steps")
 plt.ylabel("Cooperation Rates")
 plt.savefig(
-    "Figures/ipd_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "HumanLSTM/Figures/ipd_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 plt.clf()
@@ -300,7 +300,7 @@ plt.title("IPD Task - LSTM loss")
 plt.xlabel("batch")
 plt.ylabel("loss")
 plt.savefig(
-    "Figures/ipd_lstm_loss_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "HumanLSTM/Figures/ipd_lstm_loss_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 # plt.show()
 
@@ -327,7 +327,7 @@ plt.title("IPD Task - Predict Cooperation by LSTM")
 plt.xlabel("Prediction Time Steps")
 plt.ylabel("Cooperation Rates")
 plt.savefig(
-    "Figures/ipd_lstm_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "HumanLSTM/Figures/ipd_lstm_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 # plt.show()
 
@@ -354,7 +354,7 @@ plt.title("IPD Task - Predict Cooperation by AR")
 plt.xlabel("Prediction Time Steps")
 plt.ylabel("Cooperation Rates")
 plt.savefig(
-    "Figures/ipd_ar_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "HumanLSTM/Figures/ipd_ar_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 plt.clf()
@@ -380,14 +380,14 @@ plt.title("IPD Task - Predict Cooperation by LR")
 plt.xlabel("Prediction Time Steps")
 plt.ylabel("Cooperation Rates")
 plt.savefig(
-    "Figures/ipd_lr_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "HumanLSTM/Figures/ipd_lr_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 ## IGT Task
 
-choice_95 = pd.read_csv("./data/IGT/choice_95.csv", delimiter=",")
-choice_100 = pd.read_csv("./data/IGT/choice_100.csv", delimiter=",")
-choice_150 = pd.read_csv("./data/IGT/choice_150.csv", delimiter=",")
+choice_95 = pd.read_csv("HumanLSTM/data/IGT/choice_95.csv", delimiter=",")
+choice_100 = pd.read_csv("HumanLSTM/data/IGT/choice_100.csv", delimiter=",")
+choice_150 = pd.read_csv("HumanLSTM/data/IGT/choice_150.csv", delimiter=",")
 
 
 def getTS(r):
@@ -562,7 +562,7 @@ plt.xlabel("Prediction Time Steps")
 plt.ylabel("MSE")
 plt.tight_layout()
 plt.savefig(
-    "Figures/igt_mse_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "HumanLSTM/Figures/igt_mse_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 igt_lstm_mse = np.mean(MSE_by_time(ryr2, pyr2))
@@ -604,7 +604,7 @@ plt.xlabel("Prediction Time Steps")
 plt.ylabel("Percentage of Better Decks")
 plt.tight_layout()
 plt.savefig(
-    "Figures/igt_corr_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "HumanLSTM/Figures/igt_corr_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 plt.clf()
@@ -645,7 +645,7 @@ fig.suptitle("IGT Task - Action Prediction")
 fig.tight_layout()
 fig.subplots_adjust(top=0.88)
 fig.savefig(
-    "Figures/igt_pred_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "HumanLSTM/Figures/igt_pred_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 plt.clf()
@@ -654,7 +654,7 @@ plt.title("IGT Task - LSTM loss")
 plt.xlabel("batch")
 plt.ylabel("loss")
 plt.savefig(
-    "Figures/igt_lstm_loss_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "HumanLSTM/Figures/igt_lstm_loss_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 # plt.show()
 
@@ -683,7 +683,7 @@ plt.xlabel("Prediction Time Steps")
 plt.ylabel("Percentage of Better Decks")
 plt.tight_layout()
 plt.savefig(
-    "Figures/igt_ar_corr_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "HumanLSTM/Figures/igt_ar_corr_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 plt.clf()
@@ -711,7 +711,7 @@ plt.xlabel("Prediction Time Steps")
 plt.ylabel("Percentage of Better Decks")
 plt.tight_layout()
 plt.savefig(
-    "Figures/igt_lstm_corr_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "HumanLSTM/Figures/igt_lstm_corr_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 plt.clf()
@@ -813,7 +813,7 @@ fig.suptitle("IGT Task - Action Prediction by AR")
 fig.tight_layout()
 fig.subplots_adjust(top=0.88)
 fig.savefig(
-    "Figures/igt_ar_pred_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "HumanLSTM/Figures/igt_ar_pred_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 plt.clf()
@@ -915,7 +915,7 @@ fig.suptitle("IGT Task - Action Prediction by LSTM")
 fig.tight_layout()
 fig.subplots_adjust(top=0.88)
 fig.savefig(
-    "Figures/igt_lstm_pred_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "HumanLSTM/Figures/igt_lstm_pred_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 # autocorrelation
