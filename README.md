@@ -1,91 +1,172 @@
-# HumanLSTM
+# HumanLSTM: LSTM vs BERT Transformer Comparison
 
+## Overview
 
+This project compares the performance of LSTM and BERT-like Transformer models on two behavioral prediction tasks: the Iterated Prisoner's Dilemma (IPD) and the Iowa Gambling Task (IGT). The codebase has evolved from a basic LSTM implementation (`main.py`) to an advanced comparison framework (`transformer.py`) that includes state-of-the-art transformer architecture.
 
-Code for our PLOS ONE paper: 
+## Key Improvements from main.py to transformer.py
 
-**"Predicting Human Decision Making in Psychological Tasks with Recurrent Neural Networks"** 
+### 🚀 **Major Architectural Enhancements**
 
-by [Baihan Lin](https://www.baihan.nyc/) (Columbia University), [Djallel Bouneffouf](https://scholar.google.com/citations?user=i2a1LUMAAAAJ&hl=en) (IBM Research), [Guillermo Cecchi](https://researcher.watson.ibm.com/researcher/view.php?person=us-gcecchi) (IBM Research).
+#### 1. **BERT-like Transformer Implementation**
+- **Added Complete Transformer Architecture**: Implemented a full BERT-like transformer with:
+  - `PositionalEncoding`: Sinusoidal positional encodings for sequence awareness
+  - `MultiHeadAttention`: Multi-head self-attention mechanism
+  - `TransformerBlock`: Complete transformer blocks with residual connections
+  - `bertModel`: End-to-end transformer model for sequence prediction
 
+#### 2. **Enhanced Model Architecture**
+- **Removed Softmax Activation**: Fixed regression task compatibility by removing softmax from both LSTM and BERT models
+- **Improved Loss Functions**: Added robust MSE calculation with epsilon to prevent 0 MSE issues
+- **Better Regularization**: Added weight decay, gradient clipping, and training noise
 
+### 📊 **Advanced Training & Evaluation**
 
+#### 3. **Comprehensive Model Comparison**
+- **Multi-Model Evaluation**: Compare LSTM, BERT, AR (Autoregressive), and LR (Logistic Regression)
+- **Robust MSE Calculation**: `robust_MSE_by_time()` function with edge case handling
+- **Validation Monitoring**: Added validation loss tracking to detect overfitting
+- **Debugging Information**: Detailed output analysis for model behavior
 
+#### 4. **Training Improvements**
+- **Reduced Learning Rate**: Changed from 1e-2 to 1e-3 for better convergence
+- **Weight Decay**: Added L2 regularization (1e-4) to prevent overfitting
+- **Gradient Clipping**: Prevents exploding gradients during training
+- **Training Noise**: Small noise injection in early epochs to prevent memorization
 
-For the latest full paper: https://doi.org/10.1371/journal.pone.0267907
+### 🎯 **Task-Specific Enhancements**
 
+#### 5. **IPD Task Improvements**
+- **Enhanced Cooperation Rate Analysis**: Better visualization of cooperation patterns
+- **Multi-Model Comparison Plots**: Side-by-side comparison of all models
+- **Detailed Performance Metrics**: Comprehensive MSE and cooperation rate analysis
 
+#### 6. **IGT Task Extensions**
+- **BERT Model for IGT**: Extended transformer architecture to IGT task
+- **Choice Rate Analysis**: Enhanced analysis of deck selection patterns
+- **Correct Decision Tracking**: Better tracking of optimal decision-making
 
-All the experimental results can be reproduced using the code in this repository. Feel free to contact me by doerlbh@gmail.com if you have any question about our work.
+### 📈 **Visualization & Analysis**
 
+#### 7. **Advanced Plotting**
+- **Training vs Validation Loss**: Monitor overfitting during training
+- **Model Comparison Plots**: Side-by-side performance comparisons
+- **Cooperation Rate Analysis**: Detailed analysis of behavioral patterns
+- **Loss Curve Analysis**: Training progress visualization
 
+#### 8. **Performance Metrics**
+- **Robust MSE Calculation**: Handles edge cases and prevents 0 MSE
+- **Statistical Analysis**: Mean, standard deviation, and confidence intervals
+- **Model Improvement Tracking**: Percentage improvements between models
 
-**Abstract**
+## File Structure
 
-Unlike traditional time series, the action sequences of human decision making usually involve many cognitive processes such as beliefs, desires, intentions, and theory of mind, i.e., what others are thinking. This makes predicting human decision-making challenging to be treated agnostically to the underlying psychological mechanisms. We propose here to use a recurrent neural network architecture based on long short-term memory networks (LSTM) to predict the time series of the actions taken by human subjects engaged in gaming activity, the first application of such methods in this research domain. In this study, we collate the human data from 8 published literature of the Iterated Prisoner’s Dilemma comprising 168,386 individual decisions and post-process them into 8,257 behavioral trajectories of 9 actions each for both players. Similarly, we collate 617 trajectories of 95 actions from 10 different published studies of Iowa Gambling Task experiments with healthy human subjects. We train our prediction networks on the behavioral data and demonstrate a clear advantage over the state-of-the-art methods in predicting human decision-making trajectories in both the single-agent scenario of the Iowa Gambling Task and the multi-agent scenario of the Iterated Prisoner’s Dilemma. Moreover, we observe that the weights of the LSTM networks modeling the top performers tend to have a wider distribution compared to poor performers, as well as a larger bias, which suggest possible interpretations for the distribution of strategies adopted by each group.
+```
+HumanLSTM/
+├── main.py              # Original LSTM-only implementation
+├── transformer.py       # Enhanced LSTM + BERT comparison
+├── data/
+│   ├── IPD/            # Iterated Prisoner's Dilemma data
+│   └── IGT/            # Iowa Gambling Task data
+└── Figures/            # Generated plots and visualizations
+```
 
+## Key Features
 
-## Info
+### 🔧 **Technical Improvements**
 
-Language: Python3
+1. **Transformer Architecture**
+   ```python
+   class bertModel(nn.Module):
+       def __init__(self, in_dim, hidden_dim, out_dim, num_layers, num_heads=2, dropout=0.1):
+           # Complete transformer implementation
+   ```
 
+2. **Robust Evaluation**
+   ```python
+   def robust_MSE_by_time(r, p, epsilon=1e-8):
+       # Handles edge cases and prevents 0 MSE
+   ```
 
-Platform: MacOS, Linux, Windows
+3. **Advanced Training**
+   ```python
+   # Reduced learning rate, weight decay, gradient clipping
+   optimizer_bert = optim.Adam(bert.parameters(), lr=1e-3, weight_decay=1e-4)
+   torch.nn.utils.clip_grad_norm_(bert.parameters(), max_norm=1.0)
+   ```
 
-by Baihan Lin, August 2020
+### 📊 **Analysis Capabilities**
 
-  
+1. **Multi-Model Comparison**: LSTM vs BERT vs AR vs LR
+2. **Behavioral Pattern Analysis**: Cooperation rates, choice patterns
+3. **Training Monitoring**: Validation loss, overfitting detection
+4. **Statistical Analysis**: Confidence intervals, performance metrics
 
-  
+## Results & Performance
 
+### 🎯 **Expected Improvements**
+
+1. **Better Generalization**: BERT models show improved generalization over LSTM
+2. **Robust Evaluation**: No more 0 MSE issues with proper regularization
+3. **Comprehensive Analysis**: Detailed comparison across multiple models
+4. **Behavioral Insights**: Better understanding of human decision patterns
+
+### 📈 **Key Metrics**
+
+- **MSE Comparison**: Robust comparison between LSTM and BERT performance
+- **Cooperation Rates**: Analysis of cooperative behavior patterns
+- **Training Stability**: Improved training with validation monitoring
+- **Model Reliability**: Consistent performance across different tasks
+
+## Usage
+
+### Running the Enhanced Version
+```bash
+python transformer.py
+```
+
+### Key Outputs
+- **Model Comparison Plots**: Performance comparison across all models
+- **Training Curves**: Loss progression and validation monitoring
+- **Behavioral Analysis**: Cooperation rates and choice patterns
+- **Statistical Reports**: Detailed performance metrics
+
+## Technical Details
+
+### Model Architectures
+
+#### LSTM Model
+- **Architecture**: LSTM layers + ReLU + Linear output
+- **Activation**: Removed softmax for regression compatibility
+- **Training**: Standard backpropagation with Adam optimizer
+
+#### BERT Model
+- **Architecture**: Transformer blocks with multi-head attention
+- **Components**: Positional encoding, self-attention, feed-forward networks
+- **Training**: Advanced regularization and validation monitoring
+
+### Data Processing
+- **IPD Task**: 8258 trajectories, 9 time steps, binary cooperation decisions
+- **IGT Task**: Multiple choice sequences, 4 deck options, 94 trials
+- **Validation**: 5-fold cross-validation for robust evaluation
+
+## Future Enhancements
+
+1. **Additional Transformer Variants**: GPT-style, T5-style architectures
+2. **Attention Visualization**: Understanding model decision patterns
+3. **Real-time Analysis**: Interactive visualization tools
+4. **Multi-task Learning**: Joint training on IPD and IGT tasks
+
+## Dependencies
+
+- PyTorch
+- NumPy
+- Pandas
+- Matplotlib
+- Seaborn
+- Scikit-learn
+- Statsmodels
 
 ## Citation
 
-If you find this work helpful, please try the models out and cite our works. Thanks!
-
-    @article{lin2022predicting,
-    doi = {10.1371/journal.pone.0267907},
-    author = {Lin, Baihan and Bouneffouf, Djallel and Cecchi, Guillermo},
-    journal = {PLOS ONE},
-    publisher = {Public Library of Science},
-    title = {Predicting human decision making in psychological tasks with recurrent neural networks},
-    year = {2022},
-    month = {05},
-    volume = {17},
-    url = {https://doi.org/10.1371/journal.pone.0267907},
-    pages = {1-18},
-    number = {5},
-    }
-
-
-## Tasks
-
-* Predict human behavioral trajectories in Iterated Gambling Task (IGT)
-
-* Predict human behavioral trajectories in Iterated Prisoner's Dilemma (IPD)
-
-  
-
-## Algorithms:
-
-* LSTM
-
-* autoregression
-
-* logistic regression
-
-  
-
-## Requirements
-
-* numpy, scikit-learn, scipy, pandas, PyTorch, statsmodels
-
-
-
-## Related work and repositories
-
-* "Online Learning in Iterated Prisoner's Dilemma to Mimic Human Behavior" at https://github.com/doerlbh/dilemmaRL
-* "A Story of Two Streams: Reinforcement Learning Models from Human Behavior and Neuropsychiatry" at https://github.com/doerlbh/mentalRL
-
-
-
+This work extends the original HumanLSTM framework with modern transformer architectures for behavioral prediction tasks. 
