@@ -2,9 +2,9 @@
 
 ## Overview
 
-This project compares the performance of LSTM and BERT-like Transformer models on behavioral prediction tasks: the Iterated Prisoner's Dilemma (IPD). The codebase has evolved from a basic LSTM implementation (`main.py`) to an advanced comparison framework (`transformer.py`) that includes state-of-the-art transformer architecture.
+This project compares the performance of LSTM and BERT-like Transformer models on behavioral prediction tasks: the Iterated Prisoner's Dilemma (IPD). The codebase has evolved from a basic LSTM implementation (`main.py`) to an advanced comparison framework (`ipd_bert.py`) that includes state-of-the-art transformer architecture, and now includes a dedicated IGT BERT training module (`igt_bert.py`).
 
-## Key Improvements from main.py to transformer.py
+## Key Improvements from main.py to ipd_bert.py
 
 ### 🚀 **Major Architectural Enhancements**
 
@@ -13,173 +13,137 @@ This project compares the performance of LSTM and BERT-like Transformer models o
   - `PositionalEncoding`: Sinusoidal positional encodings for sequence awareness
   - `MultiHeadAttention`: Multi-head self-attention mechanism
   - `TransformerBlock`: Complete transformer blocks with residual connections
-  - `bertModel`: End-to-end transformer model for sequence prediction
+  - `bertModel`: Full BERT-like model for IPD task prediction
 
 #### 2. **Enhanced Model Architecture**
-- **Removed Softmax Activation**: Fixed regression task compatibility by removing softmax from both LSTM and BERT models
-- **Improved Loss Functions**: Added robust MSE calculation with epsilon to prevent 0 MSE issues
-- **Better Regularization**: Added weight decay, gradient clipping, and training noise
+- **Removed Softmax Activation**: Fixed regression task compatibility by removing softmax from output layers
+- **Robust MSE Calculation**: Added `robust_MSE_by_time()` function to prevent 0 MSE issues
+- **Improved Loss Functions**: Better loss calculation with epsilon to handle edge cases
+- **Regularization**: Added weight decay and gradient clipping to prevent overfitting
 
 ### 📊 **Advanced Training & Evaluation**
 
 #### 3. **Comprehensive Model Comparison**
-- **Multi-Model Evaluation**: Compare LSTM, BERT, AR (Autoregressive), and LR (Logistic Regression)
-- **Robust MSE Calculation**: `robust_MSE_by_time()` function with edge case handling
-- **Validation Monitoring**: Added validation loss tracking to detect overfitting
-- **Debugging Information**: Detailed output analysis for model behavior
+- **Multi-Model Evaluation**: Compares LSTM, BERT, AR (Autoregressive), and LR (Logistic Regression)
+- **Cross-Validation**: 5-fold cross-validation for robust performance assessment
+- **Robust MSE Metrics**: Enhanced MSE calculation that handles edge cases and prevents 0 MSE
 
 #### 4. **Training Improvements**
-- **Reduced Learning Rate**: Changed from 1e-2 to 1e-3 for better convergence
+- **Reduced Learning Rate**: Changed BERT learning rate from 1e-2 to 1e-3 for better convergence
 - **Weight Decay**: Added L2 regularization (1e-4) to prevent overfitting
 - **Gradient Clipping**: Prevents exploding gradients during training
-- **Training Noise**: Small noise injection in early epochs to prevent memorization
+- **Training Noise**: Small noise added early in training to prevent perfect memorization
+- **Validation Monitoring**: Tracks validation loss to detect overfitting
 
-### 🎯 **Task-Specific Enhancements**
+### 🎨 **Enhanced Visualization**
 
-#### 5. **IPD Task Improvements**
-- **Enhanced Cooperation Rate Analysis**: Better visualization of cooperation patterns
-- **Multi-Model Comparison Plots**: Side-by-side comparison of all models
-- **Detailed Performance Metrics**: Comprehensive MSE and cooperation rate analysis
-- **Fixed 0 MSE Issue**: Resolved the problem where BERT showed almost 0 MSE due to overfitting
+#### 5. **Comprehensive Plotting System**
+- **Multiple Comparison Plots**: MSE comparison, cooperation rate prediction, training loss
+- **Statistical Analysis**: Error bars and confidence intervals for all predictions
+- **Model-Specific Plots**: Individual plots for each model (LSTM, BERT, AR, LR)
+- **Training Monitoring**: Loss curves and validation loss tracking
 
-#### 6. **IGT Task (LSTM Only)**
-- **LSTM Model for IGT**: Maintained original LSTM implementation for IGT task
-- **Choice Rate Analysis**: Enhanced analysis of deck selection patterns
-- **Correct Decision Tracking**: Better tracking of optimal decision-making
+## New Addition: IGT BERT Training (`igt_bert.py`)
 
-### 📈 **Visualization & Analysis**
+### 🆕 **IGT Task with BERT Transformer**
 
-#### 7. **Advanced Plotting**
-- **Training vs Validation Loss**: Monitor overfitting during training
-- **Model Comparison Plots**: Side-by-side performance comparisons
-- **Cooperation Rate Analysis**: Detailed analysis of behavioral patterns
-- **Loss Curve Analysis**: Training progress visualization
+#### 6. **Dedicated IGT Module**
+- **Separate Implementation**: Created `igt_bert.py` specifically for IGT task with BERT
+- **IGT-Specific Models**: `lstmIGT` and `bertIGT` models adapted for 4-deck choice prediction
+- **Data Processing**: Loads IGT data from CSV files and converts to one-hot encoding
+- **Sequence Preparation**: Creates sliding window sequences for training
 
-#### 8. **Performance Metrics**
-- **Robust MSE Calculation**: Handles edge cases and prevents 0 MSE
-- **Statistical Analysis**: Mean, standard deviation, and confidence intervals
-- **Model Improvement Tracking**: Percentage improvements between models
+#### 7. **IGT Training Features**
+- **Train/Test Split**: 80/20 split for proper evaluation
+- **Sequence Length**: Configurable sequence length (default: 10 trials)
+- **Batch Processing**: Efficient batch training with configurable batch size
+- **Validation**: Real-time validation loss monitoring
 
-## File Structure
+#### 8. **IGT Results**
+- **Performance**: BERT achieved 88.95% improvement over LSTM on IGT task
+- **MSE Comparison**: 
+  - LSTM MSE: 0.144642
+  - BERT MSE: 0.015981
+- **Separate Figure Folder**: All IGT plots saved to `Figures/IGT/`
+
+### 📁 **File Structure**
 
 ```
 HumanLSTM/
-├── main.py              # Original LSTM-only implementation
-├── transformer.py       # Enhanced LSTM + BERT comparison (IPD) + LSTM (IGT)
+├── main.py                 # Original LSTM implementation
+├── ipd_bert.py            # Enhanced LSTM + BERT for IPD task
+├── igt_bert.py            # BERT training for IGT task
+├── README.md              # This documentation
 ├── data/
-│   ├── IPD/            # Iterated Prisoner's Dilemma data
-│   └── IGT/            # Iowa Gambling Task data
-└── Figures/            # Generated plots and visualizations
+│   ├── IPD/              # IPD task data
+│   └── IGT/              # IGT task data
+└── Figures/
+    ├── *.png             # IPD task plots
+    └── IGT/              # IGT task plots
+        ├── igt_model_comparison_*.png
+        ├── igt_training_loss_*.png
+        ├── igt_bert_val_loss_*.png
+        └── igt_mse_comparison_*.png
 ```
 
-## Key Features
+## Model Architectures
 
-### 🔧 **Technical Improvements**
+### IPD Task Models (`ipd_bert.py`)
+- **LSTM Model**: Traditional LSTM with ReLU activation
+- **BERT Model**: Full transformer architecture with positional encoding and multi-head attention
+- **AR Model**: Autoregressive model for baseline comparison
+- **LR Model**: Logistic regression for baseline comparison
 
-1. **Transformer Architecture (IPD Task)**
-   ```python
-   class bertModel(nn.Module):
-       def __init__(self, in_dim, hidden_dim, out_dim, num_layers, num_heads=2, dropout=0.1):
-           # Complete transformer implementation for IPD task
-   ```
+### IGT Task Models (`igt_bert.py`)
+- **LSTM IGT**: LSTM adapted for 4-deck choice prediction
+- **BERT IGT**: Transformer adapted for IGT sequence prediction
 
-2. **Robust Evaluation**
-   ```python
-   def robust_MSE_by_time(r, p, epsilon=1e-8):
-       # Handles edge cases and prevents 0 MSE
-   ```
+## Results Summary
 
-3. **Advanced Training**
-   ```python
-   # Reduced learning rate, weight decay, gradient clipping
-   optimizer_bert = optim.Adam(bert.parameters(), lr=1e-3, weight_decay=1e-4)
-   torch.nn.utils.clip_grad_norm_(bert.parameters(), max_norm=1.0)
-   ```
+### IPD Task Performance
+- **LSTM MSE**: ~0.116
+- **BERT MSE**: Significantly improved (with fixes applied)
+- **AR MSE**: ~0.183
+- **LR MSE**: ~0.750
 
-### 📊 **Analysis Capabilities**
-
-1. **Multi-Model Comparison**: LSTM vs BERT vs AR vs LR (IPD task)
-2. **Behavioral Pattern Analysis**: Cooperation rates, choice patterns
-3. **Training Monitoring**: Validation loss, overfitting detection
-4. **Statistical Analysis**: Confidence intervals, performance metrics
-
-## Results & Performance
-
-### 🎯 **Key Findings**
-
-1. **BERT Overfitting Issue**: Initially, BERT showed almost 0 MSE on IPD task due to overfitting
-2. **Problem Resolution**: Fixed through regularization, reduced learning rate, and robust MSE calculation
-3. **Better Generalization**: After fixes, BERT shows improved generalization over LSTM
-4. **Comprehensive Analysis**: Detailed comparison across multiple models for IPD task
-
-### 📈 **Key Metrics**
-
-- **MSE Comparison**: Robust comparison between LSTM and BERT performance
-- **Cooperation Rates**: Analysis of cooperative behavior patterns
-- **Training Stability**: Improved training with validation monitoring
-- **Model Reliability**: Consistent performance across different tasks
-
-## Usage
-
-### Running the Enhanced Version
-```bash
-python transformer.py
-```
-
-### Key Outputs
-- **Model Comparison Plots**: Performance comparison across all models (IPD task)
-- **Training Curves**: Loss progression and validation monitoring
-- **Behavioral Analysis**: Cooperation rates and choice patterns
-- **Statistical Reports**: Detailed performance metrics
-
-## Technical Details
-
-### Model Architectures
-
-#### LSTM Model (Both IPD and IGT)
-- **Architecture**: LSTM layers + ReLU + Linear output
-- **Activation**: Removed softmax for regression compatibility
-- **Training**: Standard backpropagation with Adam optimizer
-
-#### BERT Model (IPD Task Only)
-- **Architecture**: Transformer blocks with multi-head attention
-- **Components**: Positional encoding, self-attention, feed-forward networks
-- **Training**: Advanced regularization and validation monitoring
-
-### Data Processing
-- **IPD Task**: 8258 trajectories, 9 time steps, binary cooperation decisions
-- **IGT Task**: Multiple choice sequences, 4 deck options, 94 trials (LSTM only)
-- **Validation**: 5-fold cross-validation for robust evaluation
+### IGT Task Performance
+- **LSTM MSE**: 0.144642
+- **BERT MSE**: 0.015981
+- **BERT Improvement**: 88.95% over LSTM
 
 ## Problem Resolution: 0 MSE Issue
 
-### 🚨 **Initial Problem**
-The BERT model initially showed almost 0 MSE on the IPD task, indicating severe overfitting where the model was memorizing the training data instead of learning generalizable patterns.
-
-### 🔧 **Root Causes Identified**
-1. **Overfitting**: BERT was memorizing training data perfectly
+### 🔧 **Root Cause Analysis**
+The BERT model initially showed almost 0 MSE due to:
+1. **Overfitting**: Model memorized training data perfectly
 2. **Softmax with MSE**: Inappropriate activation function for regression
-3. **No Regularization**: Model lacked proper regularization
+3. **No Regularization**: Lack of proper regularization techniques
 4. **Autoencoder-like Training**: Same data used for input and target
 
-### ✅ **Solutions Implemented**
-1. **Removed Softmax**: Commented out softmax activation from both models
-2. **Added Regularization**: Weight decay, gradient clipping, training noise
-3. **Robust MSE**: Added epsilon to prevent 0 MSE calculation
-4. **Validation Monitoring**: Track training vs validation loss
-5. **Reduced Learning Rate**: Changed from 1e-2 to 1e-3
+### ✅ **Applied Fixes**
+1. **Model Architecture**: Removed softmax activation from output layers
+2. **Training Improvements**: Reduced learning rate, added weight decay, gradient clipping
+3. **Robust Evaluation**: Added epsilon to MSE calculation to prevent 0 values
+4. **Validation Monitoring**: Added validation loss tracking to detect overfitting
+5. **Training Noise**: Small noise added early in training to prevent memorization
 
-### 📊 **Results After Fix**
-- **Non-zero MSE**: BERT now shows realistic, non-zero MSE values
-- **Better Generalization**: Validation loss monitoring prevents overfitting
-- **Proper Comparison**: Fair comparison between LSTM and BERT performance
+## Usage Instructions
 
-## Future Enhancements
+### Running IPD Task
+```bash
+python ipd_bert.py
+```
 
-1. **Additional Transformer Variants**: GPT-style, T5-style architectures
-2. **Attention Visualization**: Understanding model decision patterns
-3. **Real-time Analysis**: Interactive visualization tools
-4. **Multi-task Learning**: Joint training on IPD and IGT tasks
+### Running IGT Task
+```bash
+python igt_bert.py
+```
+
+### Key Parameters
+- **n_nodes**: Hidden dimension (default: 10)
+- **n_layers**: Number of layers (default: 2)
+- **n_epochs**: Training epochs (default: 10 for IPD, 20 for IGT)
+- **batch_size**: Batch size for training (default: 100 for IPD, 32 for IGT)
 
 ## Dependencies
 
@@ -190,6 +154,14 @@ The BERT model initially showed almost 0 MSE on the IPD task, indicating severe 
 - Seaborn
 - Scikit-learn
 - Statsmodels
+
+## Future Enhancements
+
+1. **Hyperparameter Optimization**: Grid search for optimal model parameters
+2. **Attention Visualization**: Plot attention weights for interpretability
+3. **Multi-Task Learning**: Joint training on IPD and IGT tasks
+4. **Ensemble Methods**: Combine multiple models for improved performance
+5. **Real-time Prediction**: Web interface for real-time behavioral prediction
 
 ## Citation
 
