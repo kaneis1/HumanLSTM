@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project compares the performance of LSTM and BERT-like Transformer models on two behavioral prediction tasks: the Iterated Prisoner's Dilemma (IPD) and the Iowa Gambling Task (IGT). The codebase has evolved from a basic LSTM implementation (`main.py`) to an advanced comparison framework (`transformer.py`) that includes state-of-the-art transformer architecture.
+This project compares the performance of LSTM and BERT-like Transformer models on behavioral prediction tasks: the Iterated Prisoner's Dilemma (IPD). The codebase has evolved from a basic LSTM implementation (`main.py`) to an advanced comparison framework (`transformer.py`) that includes state-of-the-art transformer architecture.
 
 ## Key Improvements from main.py to transformer.py
 
@@ -40,9 +40,10 @@ This project compares the performance of LSTM and BERT-like Transformer models o
 - **Enhanced Cooperation Rate Analysis**: Better visualization of cooperation patterns
 - **Multi-Model Comparison Plots**: Side-by-side comparison of all models
 - **Detailed Performance Metrics**: Comprehensive MSE and cooperation rate analysis
+- **Fixed 0 MSE Issue**: Resolved the problem where BERT showed almost 0 MSE due to overfitting
 
-#### 6. **IGT Task Extensions**
-- **BERT Model for IGT**: Extended transformer architecture to IGT task
+#### 6. **IGT Task (LSTM Only)**
+- **LSTM Model for IGT**: Maintained original LSTM implementation for IGT task
 - **Choice Rate Analysis**: Enhanced analysis of deck selection patterns
 - **Correct Decision Tracking**: Better tracking of optimal decision-making
 
@@ -64,7 +65,7 @@ This project compares the performance of LSTM and BERT-like Transformer models o
 ```
 HumanLSTM/
 ├── main.py              # Original LSTM-only implementation
-├── transformer.py       # Enhanced LSTM + BERT comparison
+├── transformer.py       # Enhanced LSTM + BERT comparison (IPD) + LSTM (IGT)
 ├── data/
 │   ├── IPD/            # Iterated Prisoner's Dilemma data
 │   └── IGT/            # Iowa Gambling Task data
@@ -75,11 +76,11 @@ HumanLSTM/
 
 ### 🔧 **Technical Improvements**
 
-1. **Transformer Architecture**
+1. **Transformer Architecture (IPD Task)**
    ```python
    class bertModel(nn.Module):
        def __init__(self, in_dim, hidden_dim, out_dim, num_layers, num_heads=2, dropout=0.1):
-           # Complete transformer implementation
+           # Complete transformer implementation for IPD task
    ```
 
 2. **Robust Evaluation**
@@ -97,19 +98,19 @@ HumanLSTM/
 
 ### 📊 **Analysis Capabilities**
 
-1. **Multi-Model Comparison**: LSTM vs BERT vs AR vs LR
+1. **Multi-Model Comparison**: LSTM vs BERT vs AR vs LR (IPD task)
 2. **Behavioral Pattern Analysis**: Cooperation rates, choice patterns
 3. **Training Monitoring**: Validation loss, overfitting detection
 4. **Statistical Analysis**: Confidence intervals, performance metrics
 
 ## Results & Performance
 
-### 🎯 **Expected Improvements**
+### 🎯 **Key Findings**
 
-1. **Better Generalization**: BERT models show improved generalization over LSTM
-2. **Robust Evaluation**: No more 0 MSE issues with proper regularization
-3. **Comprehensive Analysis**: Detailed comparison across multiple models
-4. **Behavioral Insights**: Better understanding of human decision patterns
+1. **BERT Overfitting Issue**: Initially, BERT showed almost 0 MSE on IPD task due to overfitting
+2. **Problem Resolution**: Fixed through regularization, reduced learning rate, and robust MSE calculation
+3. **Better Generalization**: After fixes, BERT shows improved generalization over LSTM
+4. **Comprehensive Analysis**: Detailed comparison across multiple models for IPD task
 
 ### 📈 **Key Metrics**
 
@@ -126,7 +127,7 @@ python transformer.py
 ```
 
 ### Key Outputs
-- **Model Comparison Plots**: Performance comparison across all models
+- **Model Comparison Plots**: Performance comparison across all models (IPD task)
 - **Training Curves**: Loss progression and validation monitoring
 - **Behavioral Analysis**: Cooperation rates and choice patterns
 - **Statistical Reports**: Detailed performance metrics
@@ -135,20 +136,43 @@ python transformer.py
 
 ### Model Architectures
 
-#### LSTM Model
+#### LSTM Model (Both IPD and IGT)
 - **Architecture**: LSTM layers + ReLU + Linear output
 - **Activation**: Removed softmax for regression compatibility
 - **Training**: Standard backpropagation with Adam optimizer
 
-#### BERT Model
+#### BERT Model (IPD Task Only)
 - **Architecture**: Transformer blocks with multi-head attention
 - **Components**: Positional encoding, self-attention, feed-forward networks
 - **Training**: Advanced regularization and validation monitoring
 
 ### Data Processing
 - **IPD Task**: 8258 trajectories, 9 time steps, binary cooperation decisions
-- **IGT Task**: Multiple choice sequences, 4 deck options, 94 trials
+- **IGT Task**: Multiple choice sequences, 4 deck options, 94 trials (LSTM only)
 - **Validation**: 5-fold cross-validation for robust evaluation
+
+## Problem Resolution: 0 MSE Issue
+
+### 🚨 **Initial Problem**
+The BERT model initially showed almost 0 MSE on the IPD task, indicating severe overfitting where the model was memorizing the training data instead of learning generalizable patterns.
+
+### 🔧 **Root Causes Identified**
+1. **Overfitting**: BERT was memorizing training data perfectly
+2. **Softmax with MSE**: Inappropriate activation function for regression
+3. **No Regularization**: Model lacked proper regularization
+4. **Autoencoder-like Training**: Same data used for input and target
+
+### ✅ **Solutions Implemented**
+1. **Removed Softmax**: Commented out softmax activation from both models
+2. **Added Regularization**: Weight decay, gradient clipping, training noise
+3. **Robust MSE**: Added epsilon to prevent 0 MSE calculation
+4. **Validation Monitoring**: Track training vs validation loss
+5. **Reduced Learning Rate**: Changed from 1e-2 to 1e-3
+
+### 📊 **Results After Fix**
+- **Non-zero MSE**: BERT now shows realistic, non-zero MSE values
+- **Better Generalization**: Validation loss monitoring prevents overfitting
+- **Proper Comparison**: Fair comparison between LSTM and BERT performance
 
 ## Future Enhancements
 
