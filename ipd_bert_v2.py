@@ -20,7 +20,7 @@ from sklearn.metrics import mean_squared_error
 from sklearn.linear_model import LogisticRegression
 
 MSE = mean_squared_error
-lag = 1
+lag = 7
 
 import matplotlib as mpl
 
@@ -140,8 +140,9 @@ def MSE_by_time(r, p):
 
 def ipd_regression_data(regressiondata):
     x, y = [], []
+    num_pred_steps = 9 - lag  # With lag=4, we predict 5 moves
     for e in regressiondata:
-        for t in np.arange(8):
+        for t in np.arange(num_pred_steps):
             x.append(
                 [
                     e[2],
@@ -261,6 +262,10 @@ class bertModel(nn.Module):
         return x
 
 
+# Check if CUDA is available
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device}")
+
 n_fold = 5
 for fold in np.arange(n_fold):
     (
@@ -270,7 +275,7 @@ for fold in np.arange(n_fold):
         test_set_rgx,
         train_set_rgy,
         test_set_rgy,
-    ) = valid_ipd(0.2)
+    ) = valid_ipd(0.4)
     full_data = {
         "train": train_set,
         "test": test_set,
@@ -284,7 +289,7 @@ for fold in np.arange(n_fold):
     n_nodes, n_layers = 10, 2
     
     # Train LSTM model
-    lstm = lstmModel(2, n_nodes, 2, n_layers)
+    lstm = lstmModel(2, n_nodes, 2, n_layers).to(device)
     criterion_lstm = nn.MSELoss()
     optimizer_lstm = optim.Adam(lstm.parameters(), lr=1e-2)
     n_epochs, window, batch_size = 10, 10, 100
@@ -299,6 +304,7 @@ for fold in np.arange(n_fold):
                 )
                 .transpose(1, 2)
                 .float()
+                .to(device)
             )
             target = Variable(
                 torch.from_numpy(
@@ -306,6 +312,7 @@ for fold in np.arange(n_fold):
                 )
                 .transpose(1, 2)
                 .float()
+                .to(device)
             )
             output = lstm(inputs)
             loss = criterion_lstm(output.squeeze()[:, :-lag, 0], target[:, lag:, 0])
@@ -328,9 +335,9 @@ for fold in np.arange(n_fold):
     lstm = lstm.eval()
     
     # Train BERT model
-    bert = bertModel(2, n_nodes, 2, n_layers)
+    bert = bertModel(2, n_nodes, 2, n_layers).to(device)
     criterion_bert = nn.MSELoss()
-    optimizer_bert = optim.Adam(bert.parameters(), lr=1e-3, weight_decay=1e-4)
+    optimizer_bert = optim.Adam(bert.parameters(), lr=1e-4, weight_decay=1e-4)
     loss_set_bert = []
     val_loss_set_bert = []
     
@@ -346,6 +353,7 @@ for fold in np.arange(n_fold):
                 )
                 .transpose(1, 2)
                 .float()
+                .to(device)
             )
             target = Variable(
                 torch.from_numpy(
@@ -353,23 +361,23 @@ for fold in np.arange(n_fold):
                 )
                 .transpose(1, 2)
                 .float()
+                .to(device)
             )
             output = bert(inputs)
             
             # Use a more robust loss calculation
-            pred = output.squeeze()[:, :-lag, 0]
-            targ = target[:, lag:, 0]
+            # With lag=4: input is positions 0-3, target is positions 4-8
+            # Model output has 9 positions (0-8), we want predictions for positions 4-8
+            # We want to predict player 0's cooperation (action 1), which are binary (0=defect, 1=cooperate)
+            pred = output.squeeze()[:, :-lag, 0]  # Probability of action 1 (cooperate) for positions 4-8 (5 elements)
+            targ = target[:, lag:, 0]            # Targets for positions 4-8 (5 elements) - binary values
             
-            # Add small noise to prevent perfect memorization
-            if ep < 5:  # Only add noise in early epochs
-                pred = pred + torch.randn_like(pred) * 1e-4
             
             loss = criterion_bert(pred, targ)
             optimizer_bert.zero_grad()
             loss.backward()
             
-            # Gradient clipping to prevent exploding gradients
-            torch.nn.utils.clip_grad_norm_(bert.parameters(), max_norm=1.0)
+           
             
             optimizer_bert.step()
             print_loss = loss.item()
@@ -391,10 +399,10 @@ for fold in np.arange(n_fold):
         # Validation step
         bert.eval()
         with torch.no_grad():
-            val_inputs = Variable(torch.from_numpy(test_set).transpose(1, 2).float())
+            val_inputs = Variable(torch.from_numpy(test_set).transpose(1, 2).float().to(device))
             val_output = bert(val_inputs)
-            val_pred = val_output.squeeze()[:, :-lag, 0]
-            val_targ = val_inputs[:, lag:, 0]
+            val_pred = val_output.squeeze()[:, :-lag, 1]  # Probability of action 1 (cooperate) for positions 4-8
+            val_targ = val_inputs[:, lag:, 0]            # Targets for positions 4-8 (binary values)
             val_loss = criterion_bert(val_pred, val_targ).item()
             val_loss_set_bert.append(val_loss)
             
@@ -402,29 +410,42 @@ for fold in np.arange(n_fold):
                 print(f"BERT Epoch {ep+1}: Train Loss: {np.mean(epoch_losses):.5f}, Val Loss: {val_loss:.5f}")
     
     bert = bert.eval()
+    
+    # Save the trained BERT model
+    torch.save(bert.state_dict(), f"bert_model_fold_{fold}.pth")
+    print(f"BERT model saved for fold {fold}")
+    
     # ar
     train_arset = ipd_set2arset()
     armodel = VAR(train_arset)
     armodel = armodel.fit()
-    px = torch.from_numpy(test_set).transpose(1, 2).float()
+    px = torch.from_numpy(test_set).transpose(1, 2).float().to(device)
     ry = px
-    pyar = np.zeros((px.shape[0], px.shape[1]))
+    pyar = np.zeros((px.shape[0], 9 - lag))  # Only predict positions 4-8 (5 positions)
     for i in np.arange(px.shape[0]):
-        for t in np.arange(px.shape[1]):
-            pyar[i, t] = (
-                1 if armodel.forecast(np.array(px[i, : t + 1]), lag)[0][0] > 0 else 0
+        for t in np.arange(lag, 9):  # Only predict positions 4-8
+            pyar[i, t - lag] = (
+                1 if armodel.forecast(np.array(px[i, : t + 1].cpu()), lag)[0][0] > 0 else 0
             )
     # lr
     lrmodel = LogisticRegression(random_state=0, max_iter=1000).fit(
         train_set_rgx, train_set_rgy
     )
     pylrraw = lrmodel.predict(test_set_rgx)
-    pylr = pylrraw.reshape((1651, 8))
+    
+    # Calculate the correct shape based on actual test set size
+    num_test_games = test_set.shape[0]  # This should be 8258 * 0.4 = 3303
+    pylr = pylrraw.reshape((num_test_games, 9 - lag))  # Now produces correct number of predictions
     
     # Get predictions from both models
     varX = Variable(px)
     py_lstm = lstm(varX).squeeze().data.cpu().numpy()
-    py_bert = bert(varX).squeeze().data.cpu().numpy()
+    py_bert_raw = bert(varX).squeeze().data.cpu().numpy()
+    
+    # Convert BERT probabilities to binary predictions
+    # py_bert_raw has shape (batch_size, seq_len, 2) with probabilities
+    # We want to predict player 0's cooperation (action 1), so we take the probability of action 1
+    py_bert = py_bert_raw[:, :, 0]  # Probability of action 1 (cooperation) for player 0
     
     if fold == 0:
         test_set_full = test_set
@@ -447,27 +468,17 @@ for fold in np.arange(n_fold):
 
 ryc = getCR(ry[:, lag:])
 pyc = getCR(py_lstm[:, :-lag])
-pycar = getCR(pyar[:, :-lag])
+pycar = getCR(pyar)
 pyclr = getCR(pylr)
+pyc_bert = getCR(py_bert[:, :-lag])
 
-plt.clf()
-plt.plot(np.arange(8) + 1, robust_MSE_by_time(ry[:, lag:], py_lstm[:, :-lag, 0]), "r", label="LSTM")
-plt.plot(np.arange(8) + 1, robust_MSE_by_time(ry[:, lag:], pyar[:, :-lag]), "b", label="AR")
-plt.plot(np.arange(8) + 1, robust_MSE_by_time(ry[:, lag:], pylr), "g", label="LR")
-plt.legend(loc="best")
-plt.title("IPD Task - Action Prediction MSE")
-plt.xlabel("Prediction Time Steps")
-plt.ylabel("MSE")
-plt.tight_layout()
-plt.savefig(
-    "Figures/ipd_mse_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
-)
 
+bert_mse = np.mean(robust_MSE_by_time(ry[:, lag:], py_bert[:, :-lag]))
 lstm_mse = np.mean(robust_MSE_by_time(ry[:, lag:], py_lstm[:, :-lag, 0]))
-ar_mse = np.mean(robust_MSE_by_time(ry[:, lag:], pyar[:, :-lag]))
+ar_mse = np.mean(robust_MSE_by_time(ry[:, lag:], pyar))
 lr_mse = np.mean(robust_MSE_by_time(ry[:, lag:], pylr))
-print(lstm_mse, ar_mse, lr_mse)
-# 0.11624828 0.1830708661417323 0.7498940036341611
+print(bert_mse, lstm_mse, ar_mse, lr_mse)
+#0.0003334750399517361 0.11659243237227201 0.18216015743263703 0.7506736300333031
 
 plt.clf()
 plt.plot(np.arange(pyc.shape[1]) + 1, np.array(pyc.mean(0)), "r", label="LSTM")
@@ -508,40 +519,38 @@ plt.title("IPD Task - Cooperation Prediction")
 plt.xlabel("Prediction Time Steps")
 plt.ylabel("Cooperation Rates")
 plt.savefig(
-    "Figures/ipd_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_lag_4/ipd_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
-# BERT evaluation
-pyc_bert = getCR(py_bert[:, :-lag])
-bert_mse = np.mean(robust_MSE_by_time(ry[:, lag:], py_bert[:, :-lag, 0]))
+
 
 # Add debugging information
-print(f"BERT output shape: {py_bert.shape}")
-print(f"BERT output range: [{py_bert.min():.6f}, {py_bert.max():.6f}]")
-print(f"BERT output mean: {py_bert.mean():.6f}")
-print(f"BERT output std: {py_bert.std():.6f}")
+print(f"BERT raw output shape: {py_bert_raw.shape}")
+print(f"BERT prediction shape: {py_bert.shape}")
+print(f"BERT prediction range: [{py_bert.min():.6f}, {py_bert.max():.6f}]")
+print(f"BERT prediction mean: {py_bert.mean():.6f}")
+print(f"BERT prediction std: {py_bert.std():.6f}")
 print(f"Ground truth range: [{ry[:, lag:].min():.6f}, {ry[:, lag:].max():.6f}]")
 print(f"Ground truth mean: {ry[:, lag:].mean():.6f}")
 print(f"Ground truth std: {ry[:, lag:].std():.6f}")
 
-# Check if BERT output is constant (which would cause issues)
-if py_bert.std() < 1e-6:
-    print("WARNING: BERT output is nearly constant! This may cause 0 MSE.")
-    # Add small noise to prevent 0 MSE
-    py_bert = py_bert + np.random.normal(0, 1e-6, py_bert.shape)
 
 plt.clf()
-plt.plot(np.arange(8) + 1, robust_MSE_by_time(ry[:, lag:], py_lstm[:, :-lag, 0]), "r", label="LSTM")
-plt.plot(np.arange(8) + 1, robust_MSE_by_time(ry[:, lag:], py_bert[:, :-lag, 0]), "b", label="BERT")
-plt.plot(np.arange(8) + 1, robust_MSE_by_time(ry[:, lag:], pyar[:, :-lag]), "g", label="AR")
-plt.plot(np.arange(8) + 1, robust_MSE_by_time(ry[:, lag:], pylr), "y", label="LR")
+# Calculate the number of prediction steps based on lag
+num_pred_steps = 9 - lag  # Since we have 9 total moves and lag determines how many we skip
+pred_positions = np.arange(num_pred_steps) + 1
+
+plt.plot(pred_positions, robust_MSE_by_time(ry[:, lag:], py_lstm[:, :-lag, 0]), "r", label="LSTM")
+plt.plot(pred_positions, robust_MSE_by_time(ry[:, lag:], py_bert[:, :-lag]), "b", label="BERT")
+plt.plot(pred_positions, robust_MSE_by_time(ry[:, lag:], pyar), "g", label="AR")
+plt.plot(pred_positions, robust_MSE_by_time(ry[:, lag:], pylr), "y", label="LR")
 plt.legend(loc="best")
 plt.title("IPD Task - Action Prediction MSE (LSTM vs BERT)")
 plt.xlabel("Prediction Time Steps")
 plt.ylabel("MSE")
 plt.tight_layout()
 plt.savefig(
-    "Figures/ipd_mse_comparison_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_lag_4/ipd_mse_comparison_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 print("LSTM MSE:", lstm_mse)
@@ -581,7 +590,7 @@ plt.title("IPD Task - LSTM vs BERT Cooperation Prediction")
 plt.xlabel("Prediction Time Steps")
 plt.ylabel("Cooperation Rates")
 plt.savefig(
-    "Figures/ipd_lstm_vs_bert_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_lag_4/ipd_lstm_vs_bert_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 plt.clf()
@@ -590,7 +599,7 @@ plt.title("IPD Task - LSTM loss")
 plt.xlabel("batch")
 plt.ylabel("loss")
 plt.savefig(
-    "Figures/ipd_lstm_loss_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_lag_4/ipd_lstm_loss_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 plt.clf()
@@ -599,7 +608,7 @@ plt.title("IPD Task - BERT loss")
 plt.xlabel("batch")
 plt.ylabel("loss")
 plt.savefig(
-    "Figures/ipd_bert_loss_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_lag_4/ipd_bert_loss_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 # Plot training vs validation loss
@@ -612,7 +621,7 @@ plt.xlabel("epoch")
 plt.ylabel("loss")
 plt.legend()
 plt.savefig(
-    "Figures/ipd_bert_val_loss_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_lag_4/ipd_bert_val_loss_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 plt.clf()
@@ -638,7 +647,33 @@ plt.title("IPD Task - Predict Cooperation by LSTM")
 plt.xlabel("Prediction Time Steps")
 plt.ylabel("Cooperation Rates")
 plt.savefig(
-    "Figures/ipd_lstm_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_lag_4/ipd_lstm_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+)
+
+plt.clf()
+plt.plot(np.arange(pyc_bert.shape[1]) + 1, np.array(pyc_bert.mean(0)), "r", label="prediction")
+plt.plot(np.arange(ryc.shape[1]) + 1, np.array(ryc.mean(0)), "b", label="real")
+plt.fill_between(
+    np.arange(pyc_bert.shape[1]) + 1,
+    np.array(pyc_bert.mean(0)) - np.array(pyc_bert.std(0)) / np.sqrt(pyc_bert.shape[0]),
+    np.array(pyc_bert.mean(0)) + np.array(pyc_bert.std(0)) / np.sqrt(pyc_bert.shape[0]),
+    color="r",
+    alpha=0.2,
+)
+plt.fill_between(
+    np.arange(ryc.shape[1]) + 1,
+    np.array(ryc.mean(0)) - np.array(ryc.std(0)) / np.sqrt(ryc.shape[0]),
+    np.array(ryc.mean(0)) + np.array(ryc.std(0)) / np.sqrt(ryc.shape[0]),
+    color="b",
+    alpha=0.2,
+)
+plt.legend(loc="best")
+plt.ylim([0, 1])
+plt.title("IPD Task - Predict Cooperation by BERT")
+plt.xlabel("Prediction Time Steps")
+plt.ylabel("Cooperation Rates")
+plt.savefig(
+    "Figures/IPD_lag_4/ipd_bert_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 plt.clf()
@@ -664,7 +699,7 @@ plt.title("IPD Task - Predict Cooperation by AR")
 plt.xlabel("Prediction Time Steps")
 plt.ylabel("Cooperation Rates")
 plt.savefig(
-    "Figures/ipd_ar_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_lag_4/ipd_ar_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 plt.clf()
@@ -690,6 +725,6 @@ plt.title("IPD Task - Predict Cooperation by LR")
 plt.xlabel("Prediction Time Steps")
 plt.ylabel("Cooperation Rates")
 plt.savefig(
-    "Figures/ipd_lr_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_lag_4/ipd_lr_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
