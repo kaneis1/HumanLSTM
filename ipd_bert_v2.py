@@ -519,7 +519,7 @@ plt.title("IPD Task - Cooperation Prediction")
 plt.xlabel("Prediction Time Steps")
 plt.ylabel("Cooperation Rates")
 plt.savefig(
-    "Figures/IPD_lag_4/ipd_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_v2/ipd_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 
@@ -550,7 +550,7 @@ plt.xlabel("Prediction Time Steps")
 plt.ylabel("MSE")
 plt.tight_layout()
 plt.savefig(
-    "Figures/IPD_lag_4/ipd_mse_comparison_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_v2/ipd_mse_comparison_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 print("LSTM MSE:", lstm_mse)
@@ -590,7 +590,7 @@ plt.title("IPD Task - LSTM vs BERT Cooperation Prediction")
 plt.xlabel("Prediction Time Steps")
 plt.ylabel("Cooperation Rates")
 plt.savefig(
-    "Figures/IPD_lag_4/ipd_lstm_vs_bert_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_v2/ipd_lstm_vs_bert_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 plt.clf()
@@ -599,7 +599,7 @@ plt.title("IPD Task - LSTM loss")
 plt.xlabel("batch")
 plt.ylabel("loss")
 plt.savefig(
-    "Figures/IPD_lag_4/ipd_lstm_loss_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_v2/ipd_lstm_loss_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 plt.clf()
@@ -608,7 +608,7 @@ plt.title("IPD Task - BERT loss")
 plt.xlabel("batch")
 plt.ylabel("loss")
 plt.savefig(
-    "Figures/IPD_lag_4/ipd_bert_loss_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_v2/ipd_bert_loss_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 # Plot training vs validation loss
@@ -621,7 +621,7 @@ plt.xlabel("epoch")
 plt.ylabel("loss")
 plt.legend()
 plt.savefig(
-    "Figures/IPD_lag_4/ipd_bert_val_loss_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_v2/ipd_bert_val_loss_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 plt.clf()
@@ -647,7 +647,7 @@ plt.title("IPD Task - Predict Cooperation by LSTM")
 plt.xlabel("Prediction Time Steps")
 plt.ylabel("Cooperation Rates")
 plt.savefig(
-    "Figures/IPD_lag_4/ipd_lstm_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_v2/ipd_lstm_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 plt.clf()
@@ -673,7 +673,7 @@ plt.title("IPD Task - Predict Cooperation by BERT")
 plt.xlabel("Prediction Time Steps")
 plt.ylabel("Cooperation Rates")
 plt.savefig(
-    "Figures/IPD_lag_4/ipd_bert_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_v2/ipd_bert_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 plt.clf()
@@ -699,7 +699,7 @@ plt.title("IPD Task - Predict Cooperation by AR")
 plt.xlabel("Prediction Time Steps")
 plt.ylabel("Cooperation Rates")
 plt.savefig(
-    "Figures/IPD_lag_4/ipd_ar_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_v2/ipd_ar_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 
 plt.clf()
@@ -725,6 +725,6 @@ plt.title("IPD Task - Predict Cooperation by LR")
 plt.xlabel("Prediction Time Steps")
 plt.ylabel("Cooperation Rates")
 plt.savefig(
-    "Figures/IPD_lag_4/ipd_lr_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
+    "Figures/IPD_v2/ipd_lr_coop_nodes_" + str(n_nodes) + "_layers_" + str(n_layers) + ".png"
 )
 

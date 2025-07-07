@@ -363,14 +363,13 @@ for fold in np.arange(n_fold):
             input_data = inputs[:, :input_length, :]  # (batch_size, 8, 2)
             
             # Target: 9th move (position 8)
-            target = inputs[:, input_length:, 0].unsqueeze(1)  # (batch_size, 1)
+            target = inputs[:, input_length, 0]  # (batch_size,) - the 9th move
             
             output = bert(input_data) 
             # Take the last output and predict the 9th move
-            pred = output[:, input_length:, 0]  # (batch_size, 2) - probabilities for both actions
-            # Convert to binary prediction (probability of cooperation) 
+            pred = output[:, -1, 0]  # (batch_size,) - probability of cooperation for 9th move
             
-            loss = criterion_bert(pred, target.squeeze())
+            loss = criterion_bert(pred, target)
             optimizer_bert.zero_grad()
             loss.backward()
             optimizer_bert.step()
@@ -396,7 +395,7 @@ for fold in np.arange(n_fold):
             val_inputs = Variable(torch.from_numpy(test_set).transpose(1, 2).float().to(device))
             val_input_data = val_inputs[:, :input_length, :]  # First 8 moves
             val_output = bert(val_input_data)
-            val_pred = val_output[:, input_length:, 0]  # Probability of cooperation for 9th move
+            val_pred = val_output[:, -1, 0]  # Probability of cooperation for 9th move
             val_targ = val_inputs[:, input_length, 0]  # Actual 9th move
             val_loss = criterion_bert(val_pred, val_targ).item()
             val_loss_set_bert.append(val_loss)
